@@ -1,0 +1,50 @@
+#include <DHT.h>
+
+// Configuración del sensor DHT11
+#define DHTPIN 2      
+#define DHTTYPE DHT11 
+DHT dht(DHTPIN, DHTTYPE);
+
+// Configuración del botón
+const int botonPin = 3; // Pin conectado al botón
+bool capturaActiva = false; // Estado de la captura
+bool estadoBotonAnterior = LOW;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(botonPin, INPUT_PULLUP); // Configurar botón con resistencia pull-up
+  dht.begin();
+  Serial.println("Presiona el botón para iniciar/detener la captura de datos.");
+}
+
+void loop() {
+  // Leer el estado del botón
+  bool estadoBotonActual = digitalRead(botonPin);
+
+  // Detectar cambio de estado (de LOW a HIGH)
+  if (estadoBotonActual == HIGH && estadoBotonAnterior == LOW) {
+    capturaActiva = !capturaActiva; // Cambiar el estado de captura
+    delay(50); // Pequeña pausa para evitar rebotes
+  }
+  estadoBotonAnterior = estadoBotonActual;
+
+  // Si la captura está activa, leer y mostrar datos del DHT11
+  if (capturaActiva) {
+    float humedad = dht.readHumidity();
+    float temperatura = dht.readTemperature();
+
+    if (isnan(humedad) || isnan(temperatura)) {
+      Serial.println("Error al leer el sensor DHT11");
+      return;
+    }
+
+    Serial.print("Humedad: ");
+    Serial.print(humedad);
+    Serial.print(" %\t");
+    Serial.print("Temperatura: ");
+    Serial.print(temperatura);
+    Serial.println(" °C");
+
+    delay(2000); // Esperar 2 segundos antes de la próxima lectura
+  }
+}
